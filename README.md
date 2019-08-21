@@ -3,6 +3,6 @@ Repo for "Confidence predicts speed-accuracy tradeoff for subsequent decisions",
 
 The raw data from this paper are available here https://osf.io/83x7c/
 
-"preprocess_and_behavior.R" loads and preprocesses raw data in R, saves the cleaned data for hddm fitting, and creates the figures and analysis for the behavior.
+"preprocess_and_behavior.R" loads and preprocesses raw data in R 3.4.2, saves the cleaned data for hddm fitting, and creates the figures and analysis for the behavior.
 
 
