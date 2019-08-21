@@ -121,6 +121,7 @@ N <- length(table(Data$sub))
 subs <- with(Data,aggregate(sub,by=list(sub),mean))$x
 
 
+#########################################################
 #Check statistical confidence signatures on these data
 DataCor <- subset(Data,cor==1)
 DataErr <- subset(Data,cor==0)
@@ -145,7 +146,6 @@ names(cohcjErr) <- c("Subject","coh","cj")
 cohcjErr <- cast(cohcjErr,Subject~coh)
 
 #RTs on correct vs error trials
-tiff(file="RTsOnCorVsErr.tiff", res=350, width=300*(350/72), height=400*(350/72))
 par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(1,1))
 x <- snrrt[,3:7]*1000
 y <- snrrtERR[,3:7]*1000
@@ -163,12 +163,8 @@ lines(as.numeric(names(x))+.05,means,type='b')
 for(i in 1:n) points(as.numeric(names(y))[i]+.05,meansy[i],pch=24,bg="black",col="white",cex=1.5)
 lines(as.numeric(names(y))+.05,meansy,type='b')
 legend("bottomleft",legend=c("Correct","Error"),pch=c(16,17),lty=1,bty = "n")
-dev.off()
-
-
 
 #Confidence on cor vs errs
-tiff(file="ConfOnCorVsErr.tiff", res=350, width=300*(350/72), height=390*(350/72))
 par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(1,1))
 x <- cohcjCor[,3:7]
 xErr <- cohcjErr[,3:7]
@@ -189,189 +185,31 @@ means <- sapply(xErr, mean,na.rm=T);
 lines(as.numeric(names(x))+.05,means,type='b',pch=2)
 for(i in 1:n) points(as.numeric(names(x))[i]+.05,means[i],pch=24,bg="black",col="white",cex=1.5)
 legend("bottomleft",legend=c("Correct","Error"),pch=c(16,17),lty=1,bty = "n")
-dev.off()
 
-
-}
-setwd("C:/Users/kobe/Documents/Projecten/Slowing after confidence/OldData/hDDM/varConfPostSlowing")
-
-#SAVE DATA TO TEST POST-CONF SLOWING HYPOTHESIS (no iri=0)
+#############################
+#SAVE THESE DATA FOR THE DDM
 hddmData <- Data
-DataTzero <- subset(hddmData,t2==0)
-#12, 15, 21, 29 are off in t0 <- non differs from chance
-DataTzero <- subset(DataTzero,sub!=12)
-DataTzero <- subset(DataTzero,sub!=15)
-DataTzero <- subset(DataTzero,sub!=21)
-DataTzero <- subset(DataTzero,sub!=29)
-hddmData <- subset(hddmData,t2 != 0)
-hddmData <- subset(hddmData,prevconf > 0)
-hddmData <- subset(hddmData,follconf > 0)
+hddmData <- subset(hddmData,t2 != 0) #drop the immediate confidence conditions
+hddmData <- subset(hddmData,prevconf > 0) #drop nonsense trials
+hddmData <- subset(hddmData,follconf > 0) #drop nonsense trials
 hddmData <- subset(hddmData,withinblocktrial > 1) #delete first trials (no prevconf)
 hddmData <- subset(hddmData,withinblocktrial < 60) #delete last trials (no postconf)
-hddmData$subj_idx <- hddmData$sub
+hddmData$subj_idx <- hddmData$sub #some labels that hddm needs
 hddmData$resp <- hddmData$resp-1
 hddmData$stimulus <- -1
 hddmData$stimulus[hddmData$resp==1 & hddmData$cor == 1] <- 1
 hddmData$stimulus[hddmData$resp==0 & hddmData$cor == 0] <- 1
 hddmData$response <- hddmData$resp
 Data <- hddmData
-# write.table(hddmData,"varConfcombined3_hddmSLOWING.csv",quote=F,row.names=F,sep=',')
-
-#0. Inspect Data per participants
-par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(3,2))
-for(s in 1:N){   
-i = subs[s]
-temp <- subset(Data,sub==i)
-plot(temp$rt,frame=F,main=paste('Subject',s),ylab="RTs",xlab='trial',ylim=c(0,3),cex.lab=2.5,cex.axis=2.5,cex.main=2.5)
-tempBlock <- with(temp,aggregate(cor,by=list(block),mean,na.rm=TRUE))
-plot(tempBlock$x,frame=F,main="",ylab='accuracy',xlab='block',ylim=c(.4,1),cex.lab=2.5,cex.axis=2.5,cex.main=2.5);abline(h=.5,lty=2)
-#  plot(temp$conf,frame=F,main="",ylab="ratings")
-}
+write.table(hddmData,"Experiment1_hddm.csv",quote=F,row.names=F,sep=',')
 
 
-##########
-#Analysis#
-library(lmerTest)
+##############################################################
+### Behavioral analysis
 Data$coh <- as.factor(Data$coh)
 Data$cor <- as.factor(Data$cor)
-#RT
 DataCor <- subset(Data,cor==1)
 DataErr <- subset(Data,cor==0)
-fit <- lmer(rt~coh + (1|sub),data=DataCor)
-fit1 <- lmer(rt~coh + (coh|sub),data=DataCor)
-anova(fit,fit1)
-anova(fit1)
-
-#cor
-fit <- glmer(cor~coh + (1|sub),data=Data,family='binomial')
-fit1 <- glmer(cor~coh + (coh|sub),data=Data,family='binomial')
-anova(fit,fit1)
-Anova(fit)
-
-#conf
-fit <- lmer(conf~coh*cor + (1|sub),data=Data)
-fit1a <- lmer(conf~coh*cor + (coh|sub),data=Data)
-fit1b <- lmer(conf~coh*cor + (cor|sub),data=Data)
-anova(fit,fit1a)
-anova(fit,fit1b)
-fit2 <- lmer(conf~coh*cor + (coh+cor|sub),data=Data)
-#fit2a <- lmer(conf~coh*cor + (coh*cor|sub),data=Data)
-anova(fit2)
-
-Data$t2 <- as.factor(Data$t2);Data$coh <- as.factor(Data$coh)
-fit3 <- lmer(conf~coh*cor*t2 + (coh+cor|sub),data=Data)
-fit3_b <- lmer(conf~coh*cor*t2 + (coh+cor+t2|sub),data=Data)
-anova(fit3,fit3_b)
-anova(fit3_b)
-data.frame(effect('t2',fit3_b))
-
-#Post-hoc linear contrast, default=0%,error trials,t1
-E <- matrix(c(0,1,2,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),1) #error trials 
-C <- matrix(c(0,1,2,3,4,1,0,1,2,3,4,0,0,0,0,0,0,0,0,0),1) #correts trials 
-t <- glht(fit3_b, linfct = E)
-t <- glht(fit3_b, linfct = C)
-summary(t)
-
-#Revision 1: show the BF for no effect of post-decisional evidence
-library(BayesFactor)
-confi <- with(Data,aggregate(conf,by=list(sub,coh,cor,t2),mean))
-names(confi) <- c('sub','coh','cor','t2','conf')
-confi$coh <- as.factor(confi$coh);confi$t2 <- as.factor(confi$t2);confi$sub <- as.factor(confi$sub);confi$cor <- as.factor(confi$cor)
-fit <- anovaBF(conf~coh*t2*cor+sub,data=confi,whichRandom="sub")
-fit[18]/fit[17]
-
-
-#Revision 1: 4A. HOW GOOD ARE THE DATA: ANALYSIS ON SINGLE SUBJECT LEVEL
-library(car)
-rt_p <- rep(NA,N);acc_p <- rep(NA,N);conf_p <- rep(NA,N);
-rt_b <- rep(NA,N);acc_b <- rep(NA,N);conf_b <- rep(NA,N);
-rt_halve <- rep(NA,N);acc_halve <- rep(NA,N);conf_halve <- rep(NA,N);
-for(i in 1:N){
-  temp <- subset(Data,sub==subs[i])
-  temp$cor <- as.numeric(temp$cor)
-  temp$halve <- "first";
-  temp$halve[round(length(temp$rt)/2):length(temp$rt)] <- "second"
-  temp$halve <- as.factor(temp$halve)
-  tempCor <- subset(temp,cor==1)
-  
-  fit <- lm(rt~coh*halve,data=tempCor)
-  rt_p[i] <- anova(fit)[1,5]
-  rt_halve[i] <- anova(fit)[3,5]
-  rt_b[i] <- summary(fit)$coefficients[2,1]
-  fit <- glm(cor~coh*halve,data=temp)
-  acc_p[i] <- Anova(fit)[1,3]
-  acc_halve[i] <- Anova(fit)[3,3]
-  acc_b[i] <- summary(fit)$coefficients[2,1]
-  fit <- glm(conf~coh*halve,data=temp)
-  conf_p[i] <- Anova(fit)[1,3]
-  conf_halve[i] <- Anova(fit)[3,3]
-  conf_b[i] <- summary(fit)$coefficients[2,1]
-}
-paste("Significant effect of coherence on RT for ", length(which(rt_p<.05))," out of ",N," subs; correct sign for ", length(which(rt_b<0)))
-paste("Significant effect of coherence on accuracy for ", length(which(acc_p<.05))," out of ",N," subs; correct sign for ", length(which(acc_b>0)))
-paste("Significant effect of coherence on confidence for ", length(which(conf_p<.05))," out of ",N," subs; correct sign for ", length(which(conf_b>0)))
-
-paste("Coherence*halve for rt was p<05 for ", length(which(rt_halve<.05))," out of ",N," subs")
-paste("Coherence*halve for accuracy was p<05 for ", length(which(acc_halve<.05))," out of ",N," subs")
-paste("Coherence*halve for confidence was p<05 for ", length(which(conf_halve<.05))," out of ",N," subs")
-#who are these people
-subs[which(rt_p>.05|acc_p>.05|conf_p>.05)] #no scaling with coherence
-subs[which(rt_halve<.05|acc_halve<.05|conf_halve<.05)] #interaction with halve
-
-
-#Revision 1: 4A. HOW STABLE ARE THE DATA: INCLUDE BLOCK
-DataCor$block <- as.factor(DataCor$block)
-Data$block <- as.factor(Data$block)
-fit1 <- lmer(rt~coh*block + (1|sub),data=DataCor)
-fit1 <- glmer(cor~coh*block + (1|sub),data=Data,family='binomial')
-Anova(fit1)
-plot(effect('coh:block',fit1))
-#Revision 1: 4A. HOW STABLE ARE THE DATA: check at the subject level
-rt_p <- rep(NA,N);acc_p <- rep(NA,N);conf_p <- rep(NA,N);meta_p <- rep(NA,N);
-for(i in 1:N){
-  temp <- subset(Data,sub==subs[i])
-  temp$cor <- as.numeric(temp$cor)
-  temp$trial <- 1:length(temp$trial)
-  
-  fit <- lm(rt~trial,data=temp)
-  rt_p[i] <- anova(fit)[1,5]
-  fit <- glm(cor~trial,data=temp)
-  acc_p[i] <- Anova(fit)[1,3]
-  fit <- glm(conf~trial,data=temp)
-  conf_p[i] <- Anova(fit)[1,3]
-  temp$conf <- as.factor(temp$conf)
-  fit <- glm(cor~conf*trial,data=temp)
-  meta_p[i] <- Anova(fit)[3,3]
-}
-paste("Significant change in RT for ", length(which(rt_p<.05))," out of ",N," subs")
-paste("Significant change in accuracy for ", length(which(acc_p<.05))," out of ",N," subs")
-paste("Significant change in confidence for ", length(which(conf_p<.05))," out of ",N," subs")
-paste("Significant change in cor~conf for ", length(which(meta_p<.05))," out of ",N," subs")
-
-
-#post-hoc seperations
-t2 <- subset(Data,t2==1)
-fitFU <- lmer(conf~coh*cor + (coh+cor|sub),data=t2)
-anova(fitFU)
-
-
-#Autocorrelation
-fit <- lmer(rt~prevrt + (1|sub),data=Data)
-fita <- lmer(rt~prevrt + (prevrt|sub),data=Data)
-anova(fit,fita)
-anova(fita)
-
-fit <- glmer(cor~prevcor + (1|sub),data=Data,family='binomial')
-fita <- glmer(cor~prevcor + (prevcor|sub),data=Data,family='binomial')
-anova(fit,fita)
-Anova(fit)
-
-
-fit <- lmer(conf~prevconf + (1|sub),data=Data)
-fita <- lmer(conf~prevconf + (prevconf|sub),data=Data)
-anova(fit,fita)
-anova(fita)
-
 
 #### Recode previous and following cj in three bins, guess is the reference
 Data$prevcj[Data$prevconf==1] = 'C_error' #sure error
@@ -389,45 +227,7 @@ Data$follcj[Data$follconf==4] = 'B_guess' #guess cor => this becomes the referen
 Data$follcj[Data$follconf==5] = 'A_correct' #prob cor
 Data$follcj[Data$follconf==6] = 'A_correct' #sure cor
 
-#########################################
-# "Simulate" bound based on actual data #
-# Data$bound <- NA
-# Data$bound[1] <- 1
-# for(i in 2:length(Data$rt)){
-#   if(Data$prevcj[i]=='A_correct'){ Data$bound[i] <- Data$bound[i-1] -.045} 
-#   if(Data$prevcj[i]=='B_guess'){ Data$bound[i] <- Data$bound[i-1] +.08}
-#   if(Data$prevcj[i]=='C_error'){ Data$bound[i] <- Data$bound[i-1] +.2}
-# }
-# plot(Data$bound)
-# with(Data,aggregate(bound,by=list(prevcj),mean)) #only condition on previous confidence gives flawed result
-# with(Data,aggregate(bound,by=list(prevcj),mean))$x - with(Data,aggregate(bound,by=list(follcj),mean))$x #statistical control
-# with(Data,aggregate(bound,by=list(prevcj,follcj),mean)) #only selecting post-same-conf trials works
-# with(Data,aggregate(bound,by=list(prevcj,postcor),mean)) #only conditio on postcor gives flawed result
-
-#crosstabs
-table(Data$sub,Data$prevcj)
-table(Data$sub,Data$follcj)
-
-table(Data$sub,Data$prevcj,Data$t2) #10 is out for t1, 3 and 15 for t2
-table(Data$sub,Data$follcj,Data$t2) #10 is out for t1, 3, 13 and 15, 28 for t2
-
-table(Data$sub,Data$prevcj,Data$prevcor) #2,15,28 are out for postcor!!
-table(Data$sub,Data$follcj,Data$prevcor) #and 26?
-
-#show trial numbers
-x <- table(Data$prevcj,Data$sub)[c(3,2,1),]
-ebar <- barplot(x,ylab='# trials',xlab='participants',main="Experiment 1",col=c(rgb(0,1,0,.5),rgb(1,0,0,.5),rgb(0,0,1,.5)),border='white')
-for(i in 1:N) text(x=ebar[i],y=sum(x[1:2,i])+x[3,i]/2,x[3,i], srt = 90)
-for(i in 1:N) text(x=ebar[i],y=x[1,i]+x[2,i]/2,x[2,i], srt = 90)  
-for(i in 1:N) text(x=ebar[i],y=x[1,i]/2,x[1,i], srt = 90) 
-
-
-
-################################################################################
-###  REPLICATE PREVIOUS BEHAVIORAL ANALYSIS
-################################################################################
-#FIRST show that behavior scales with SNR THEN show that previous confidence adds somethin
-#(seperately for exp1 and exp2)
+#Show that behavior scales with coherence 
 Data$snr <- as.factor(Data$coh)
 Data$cj <- as.numeric(Data$conf)
 DataCor <- subset(Data,cor==1)
@@ -465,8 +265,6 @@ snrcjErr <- cast(snrcjErr,Subject~snr)
 
 
 #RTs and Accuracy
-setwd("C:/Users/kobe/Documents/Projecten/Slowing after confidence/OldData/hDDM/varConfPostSlowing")
-tiff(file="figureswcond/snr1_WITH_EBAR.tiff", res=350, width=300*(350/72), height=400*(350/72))
 par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(1,1))
 x <- snrrt[,2:6]
 y <- snrcor[,2:6]
@@ -501,10 +299,8 @@ lines(as.numeric(names(y))+.05,meansy,type='b')
 
 # lines(as.numeric(names(x))+.05,x_pred,type='p',pch=4,col='green',lwd=2)
 # lines(as.numeric(names(y))+.05,rescale(y_pred,to=c(-325,0),from=c(.5,1)),type='p',pch=4,col='green',lwd=2)
-dev.off()
 
 #RTs on correct vs error trials
-tiff(file="figureswcond/RTcorerr.tiff", res=350, width=300*(350/72), height=400*(350/72))
 par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(1,1))
 x <- snrrt[,2:6]
 y <- snrrtERR[,2:6]
@@ -521,11 +317,9 @@ for(i in 1:n) points(as.numeric(names(x))[i]+.05,means[i]*1000,pch=21,bg="black"
 lines(as.numeric(names(x))+.05,means*1000,type='b')
 for(i in 1:n) points(as.numeric(names(y))[i]+.05,meansy[i]*1000,pch=24,bg="black",col="white",cex=1.5)
 lines(as.numeric(names(y))+.05,meansy*1000,type='b')
-dev.off()
 
 
 #Confidence
-tiff(file="figureswcond/coh_cj.tiff", res=350, width=300*(350/72), height=390*(350/72))
 par(mar=c(5.1, 5.1, 4.1, 4.1),mfrow=c(1,1))
 x <- snrcjCor[,2:6]
 xErr <- snrcjErr[,2:6]
@@ -548,9 +342,8 @@ means <- sapply(xErr, mean,na.rm=T);
 lines(as.numeric(names(x))+.05,means,type='b',pch=2)
 for(i in 1:n) points(as.numeric(names(x))[i]+.05,means[i],pch=24,bg="black",col="white",cex=1.5)
 legend("bottomleft",legend=c("Correct","Error"),pch=c(16,17),lty=1,bty = "n")
-dev.off()
 
-#X. RT predicts accuracy (tobi) 
+#RT predicts accuracy 
 {
   Data$RTquint <- NA;SubsID <- names(table(Data$sub))
   for(j in 1:length(table(Data$sub))){
