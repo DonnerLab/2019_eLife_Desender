@@ -12,4 +12,12 @@ The raw data from this paper are available here https://osf.io/83x7c/
 
 #EEG
 
+4. "preprocessing"
+
+5. "hddm_eegRegression_fit.py" loads preproceseed EEG data, and fits a model estimating regression coefficients relating previous trial Pe/ERN to bound/drdift.
+
+5. "hddm_eegBinned_fit.py" loads preproceseed EEG data, and fits a model estimating the influence of previous trial binned amplitude Pe on bound/drift.
+
+6. "Plotting":
+
 
