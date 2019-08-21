@@ -7,7 +7,7 @@ cols=c('grey',rgb(1,0,0,.2),rgb(0,0,1,.2))
 library(scales)
 
 #Load the hddm output
-allData = read.csv("varConfSlowing_estimates.csv",header=T,sep=',')
+allData = read.csv("Experiment1_HDDMestimates.csv",header=T,sep=',')
 
 #make clearer dataframes
 bound3 <- data.frame(matrix(0,28,1));names(bound3) <- c("baseline")
