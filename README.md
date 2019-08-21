@@ -1,7 +1,7 @@
 # 2019_eLife_Desender
 Repo for "Confidence predicts speed-accuracy tradeoff for subsequent decisions", authored by Kobe Desender, Annika Boldt, Tom Verguts, & Tobias H donner. Published in eLife.
 
-The raw data from this paper are available here https://osf.io/83x7c/
+The raw data from this paper are available here: https://osf.io/83x7c/ (behavior) and here: https://github.com/AnnikaBoldt/Boldt_Yeung_2015 (EEG)
 
 #BEHAVIOR
 1. "preprocess_and_behavior.R" loads and preprocesses raw data in R 3.4.2, saves the cleaned data for hddm fitting, and creates the figures and analysis for the behavior.
@@ -12,12 +12,12 @@ The raw data from this paper are available here https://osf.io/83x7c/
 
 #EEG
 
-4. "preprocessing"
+4. "preprocess_EEG_data.R": loads and preprocesses raw (EEG) data, saves the cleaned data for hddm fitting.
 
 5. "hddm_eegRegression_fit.py" loads preproceseed EEG data, and fits a model estimating regression coefficients relating previous trial Pe/ERN to bound/drdift.
 
 5. "hddm_eegBinned_fit.py" loads preproceseed EEG data, and fits a model estimating the influence of previous trial binned amplitude Pe on bound/drift.
 
-6. "Plotting":
+6. "plot_ddm_EEG_output.r": loads the hddm output from the EEG fits and makes beautiful plots from these.
 
 
